@@ -26,7 +26,8 @@
         enableCaching: true,         // Enable localStorage caching
         cacheExpiration: 7,          // Cache expiration in days
         respectExisting: true,       // Skip if favicon already exists
-        forceRegenerate: false       // Force regeneration even if cached
+        forceRegenerate: false,      // Force regeneration even if cached
+        checkImplicitFavicon: false  // Check for /favicon.ico (can cause 404 console errors)
     };
 
     /**
@@ -86,7 +87,7 @@
             try {
                 // Step 1: Check if favicon already exists (unless forced)
                 if (this.config.respectExisting && !this.config.forceRegenerate) {
-                    const existingFavicon = this.detectExistingFavicon();
+                    const existingFavicon = await this.detectExistingFavicon();
                     if (existingFavicon) {
                         this.log('Existing favicon detected, skipping generation:', existingFavicon);
                         this.initialized = true;
@@ -128,7 +129,7 @@
         /**
          * Detect if favicon already exists on the page
          */
-        detectExistingFavicon() {
+        async detectExistingFavicon() {
             try {
                 // Look for existing favicon elements
                 const faviconSelectors = [
@@ -164,14 +165,17 @@
                     }
                 }
 
-                // Check for favicon.ico in root (implicit favicon)
-                if (this.checkImplicitFavicon()) {
-                    this.log('Found implicit favicon.ico');
-                    return {
-                        element: null,
-                        href: '/favicon.ico',
-                        type: 'implicit'
-                    };
+                // Check for favicon.ico in root (implicit favicon) if enabled
+                if (this.config.checkImplicitFavicon) {
+                    const hasImplicitFavicon = await this.checkImplicitFavicon();
+                    if (hasImplicitFavicon) {
+                        this.log('Found implicit favicon.ico');
+                        return {
+                            element: null,
+                            href: '/favicon.ico',
+                            type: 'implicit'
+                        };
+                    }
                 }
 
                 this.log('No existing favicon detected');
@@ -186,26 +190,16 @@
         /**
          * Check if implicit favicon.ico exists
          */
-        checkImplicitFavicon() {
+        async checkImplicitFavicon() {
             try {
-                // Create a test image to check if favicon.ico exists
-                return new Promise((resolve) => {
-                    const img = new Image();
-                    const timeout = setTimeout(() => resolve(false), 1000);
-                    
-                    img.onload = () => {
-                        clearTimeout(timeout);
-                        resolve(true);
-                    };
-                    
-                    img.onerror = () => {
-                        clearTimeout(timeout);
-                        resolve(false);
-                    };
-                    
-                    img.src = '/favicon.ico?' + Math.random(); // Cache busting
+                // Use fetch instead of Image to avoid console 404 errors
+                const response = await fetch('/favicon.ico?' + Math.random(), {
+                    method: 'HEAD', // Only check headers, don't download content
+                    cache: 'no-cache'
                 });
+                return response.ok;
             } catch (error) {
+                // Silently handle network errors (including 404s)
                 return false;
             }
         }
