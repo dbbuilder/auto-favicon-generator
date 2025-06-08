@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Favicon Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #1e40af;
+            color: white;
+        }
+        .controls {
+            background-color: rgba(255,255,255,0.1);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        button {
+            background-color: #16a34a;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #15803d;
+        }
+        .cache-info {
+            background-color: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Advanced Favicon Generator Demo</h1>
+    
+    <div class="controls">
+        <h3>Cache and Generation Controls</h3>
+        <button onclick="showCacheInfo()">Show Cache Info</button>
+        <button onclick="clearCache()">Clear Cache</button>
+        <button onclick="forceRegenerate()">Force Regenerate</button>
+        <button onclick="testExistingFavicon()">Test Existing Favicon</button>
+        <button onclick="toggleLogging()">Toggle Logging</button>
+        
+        <div id="cache-info" class="cache-info" style="display: none;"></div>
+    </div>
+
+    <div class="controls">
+        <h3>Configuration Examples</h3>
+        <button onclick="changeColor('#ef4444')">Red Theme</button>
+        <button onclick="changeColor('#10b981')">Green Theme</button>
+        <button onclick="changeColor('#8b5cf6')">Purple Theme</button>
+        <button onclick="changeSize(64)">Large Size (64px)</button>
+        <button onclick="disableCaching()">Disable Caching</button>
+    </div>
+
+    <p>This demonstrates advanced features including caching, existing favicon detection, and configuration options.</p>
+
+    <!-- Disable auto-initialization -->
+    <script>window.DISABLE_AUTO_FAVICON = true;</script>
+    <script src="../dist/favicon-generator.min.js"></script>
+    
+    <script>
+        let faviconGen = null;
+
+        // Initialize with custom configuration
+        function initFavicon() {
+            faviconGen = new FaviconGenerator({
+                enableLogging: true,
+                enableCaching: true,
+                cacheExpiration: 1, // 1 day for testing
+                respectExisting: true,
+                fallbackColor: '#1e40af'
+            });
+            
+            faviconGen.init().then(() => {
+                console.log('Favicon generator initialized');
+                showCacheInfo();
+            });
+        }
+
+        // Show detailed cache information
+        function showCacheInfo() {
+            if (!faviconGen) {
+                alert('Initialize favicon generator first');
+                return;
+            }
+            
+            const cacheInfo = faviconGen.getCacheInfo();
+            const infoDiv = document.getElementById('cache-info');
+            infoDiv.style.display = 'block';
+            infoDiv.textContent = JSON.stringify(cacheInfo, null, 2);
+        }
+
+        // Clear cache manually
+        function clearCache() {
+            if (!faviconGen) {
+                alert('Initialize favicon generator first');
+                return;
+            }
+            
+            faviconGen.clearCache();
+            alert('Cache cleared');
+            showCacheInfo();
+        }
+
+        // Force regeneration
+        function forceRegenerate() {
+            if (!faviconGen) {
+                alert('Initialize favicon generator first');
+                return;
+            }
+            
+            faviconGen.forceClearAndRegenerate().then(() => {
+                alert('Favicon regenerated');
+                showCacheInfo();
+            });
+        }
+
+        // Test existing favicon detection
+        function testExistingFavicon() {
+            // Add a manual favicon
+            const link = document.createElement('link');
+            link.rel = 'icon';
+            link.href = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+            link.setAttribute('data-manual', 'true');
+            document.head.appendChild(link);
+            
+            alert('Manual favicon added. Reinitialize to test detection.');
+        }
+
+        // Change theme color
+        function changeColor(color) {
+            if (!faviconGen) {
+                alert('Initialize favicon generator first');
+                return;
+            }
+            
+            faviconGen.regenerate({ 
+                fallbackColor: color,
+                forceRegenerate: true 
+            }).then(() => {
+                alert(`Theme changed to ${color}`);
+                showCacheInfo();
+            });
+        }
+
+        // Change favicon size
+        function changeSize(size) {
+            if (!faviconGen) {
+                alert('Initialize favicon generator first');
+                return;
+            }
+            
+            faviconGen.regenerate({ 
+                size: size,
+                forceRegenerate: true 
+            }).then(() => {
+                alert(`Size changed to ${size}px`);
+                showCacheInfo();
+            });
+        }
+
+        // Toggle logging
+        function toggleLogging() {
+            if (!faviconGen) {
+                alert('Initialize favicon generator first');
+                return;
+            }
+            
+            const currentLogging = faviconGen.getConfig().enableLogging;
+            faviconGen.updateConfig({ enableLogging: !currentLogging });
+            alert(`Logging ${!currentLogging ? 'enabled' : 'disabled'}`);
+        }
+
+        // Disable caching
+        function disableCaching() {
+            if (!faviconGen) {
+                alert('Initialize favicon generator first');
+                return;
+            }
+            
+            faviconGen.updateConfig({ enableCaching: false });
+            faviconGen.clearCache();
+            alert('Caching disabled and cache cleared');
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', initFavicon);
+    </script>
+</body>
+</html>

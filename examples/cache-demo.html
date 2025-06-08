@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cache Performance Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f8fafc;
+        }
+        .timing {
+            background-color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .performance-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <h1>Cache Performance Demo</h1>
+    <p>This page demonstrates the performance benefits of favicon caching.</p>
+    
+    <div class="timing">
+        <h3>Generation Timing</h3>
+        <div id="timing-info">Initializing...</div>
+    </div>
+    
+    <div class="performance-stats">
+        <div class="stat-card">
+            <h4>First Load</h4>
+            <div id="first-load">Measuring...</div>
+        </div>
+        <div class="stat-card">
+            <h4>Cached Load</h4>
+            <div id="cached-load">Reload page to test</div>
+        </div>
+        <div class="stat-card">
+            <h4>Cache Status</h4>
+            <div id="cache-status">Checking...</div>
+        </div>
+    </div>
+
+    <button onclick="location.reload()">Reload Page</button>
+    <button onclick="clearCacheAndReload()">Clear Cache & Reload</button>
+
+    <script src="../dist/favicon-generator.min.js"></script>
+    
+    <script>
+        const startTime = performance.now();
+        let faviconGen = null;
+
+        // Track performance
+        autoFavicon({
+            enableLogging: true,
+            enableCaching: true
+        }).then(() => {
+            const endTime = performance.now();
+            const duration = Math.round(endTime - startTime);
+            
+            // Get cache info
+            const cacheInfo = window.faviconGenerator.getCacheInfo();
+            
+            // Update UI
+            document.getElementById('timing-info').textContent = `Generation completed in ${duration}ms`;
+            
+            if (cacheInfo.cached && cacheInfo.signatureMatch && !cacheInfo.expired) {
+                document.getElementById('cached-load').textContent = `${duration}ms (from cache)`;
+                document.getElementById('cache-status').textContent = 'Hit - Using cached favicon';
+            } else {
+                document.getElementById('first-load').textContent = `${duration}ms (generated new)`;
+                document.getElementById('cache-status').textContent = 'Miss - Generated new favicon';
+            }
+            
+            // Store performance data
+            if (!localStorage.getItem('favicon-perf-first')) {
+                localStorage.setItem('favicon-perf-first', duration.toString());
+            }
+        });
+
+        function clearCacheAndReload() {
+            if (window.faviconGenerator) {
+                window.faviconGenerator.clearCache();
+            }
+            localStorage.removeItem('favicon-perf-first');
+            location.reload();
+        }
+
+        // Display previous performance data
+        window.addEventListener('load', () => {
+            const firstLoad = localStorage.getItem('favicon-perf-first');
+            if (firstLoad) {
+                document.getElementById('first-load').textContent = `${firstLoad}ms (previous session)`;
+            }
+        });
+    </script>
+</body>
+</html>

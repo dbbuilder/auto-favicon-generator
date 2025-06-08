@@ -1,0 +1,45 @@
+{
+  "name": "auto-favicon-generator",
+  "version": "1.0.0",
+  "description": "Automatically generates favicon from page content, logos, and styling",
+  "main": "src/favicon-generator.js",
+  "browser": "dist/favicon-generator.min.js",
+  "unpkg": "dist/favicon-generator.min.js",
+  "jsdelivr": "dist/favicon-generator.min.js",
+  "files": [
+    "src/",
+    "dist/",
+    "examples/"
+  ],
+  "scripts": {
+    "build": "node build.js",
+    "dev": "http-server examples/",
+    "test": "echo 'Tests coming soon'",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "favicon",
+    "icon",
+    "generator",
+    "automatic",
+    "logo",
+    "browser",
+    "javascript",
+    "cache",
+    "performance"
+  ],
+  "author": "Your Name <your.email@example.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/auto-favicon-generator.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/auto-favicon-generator/issues"
+  },
+  "homepage": "https://github.com/yourusername/auto-favicon-generator#readme",
+  "devDependencies": {
+    "terser": "^5.0.0",
+    "http-server": "^14.0.0"
+  }
+}
